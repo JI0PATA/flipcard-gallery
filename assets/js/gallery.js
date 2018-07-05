@@ -1,8 +1,14 @@
 class FlipGallery {
-    constructor(container, src, interval) {
+    constructor(container, src, options) {
         this._container = container;
         this._src = src;
-        this._interval = interval;
+
+        /**
+         * Опции
+         */
+        this._interval = options.interval;
+        this._transition = options.transition;
+
         this._prevRandomCard = null;
         this._prevRandomSrc = null;
 
@@ -33,13 +39,7 @@ class FlipGallery {
      * @returns {number}
      */
     get randomSrc() {
-        let _randomSrc = this._src[FlipGallery.random(0, this._src.length - 1)];
-
-        if (this._prevRandomSrc === _randomSrc) return this.randomSrc;
-
-        this._prevRandomSrc = _randomSrc;
-
-        return _randomSrc;
+        return this._src[FlipGallery.random(0, this._src.length - 1)];
     }
 
     /**
@@ -57,34 +57,71 @@ class FlipGallery {
         }
         setTimeout(_ => {
             this.changeSrc(flipperNumber);
-        }, this._interval);
+        }, this._transition);
     }
 
+    /**
+     * Изменение пути картинки
+     * @param flipperNumber
+     */
     changeSrc(flipperNumber) {
         let flipperTransformVal = FlipGallery.getNumber(this.card_front[flipperNumber].parentNode.style.transform);
-        let _randomSrc = this.randomSrc;
 
-        // Смена картинки на data-flipcard=front
         if (flipperTransformVal % 360 !== 0 && flipperTransformVal % 180 === 0) {
-            if (this.card_front[flipperNumber].getAttribute('src') === _randomSrc) return this.changeSrc(flipperNumber);
-
-            this.card_front[flipperNumber].setAttribute('src', _randomSrc);
+            // Смена картинки на data-flipcard=front
+            this.changeSrcFront(flipperNumber);
         } else {
             // Смена картинки на data-flipcard=back
-            if (this.card_front[flipperNumber].getAttribute('src') === _randomSrc) return this.changeSrc(flipperNumber);
-
-            this.card_back[flipperNumber].setAttribute('src', _randomSrc);
+            this.changeSrcBack(flipperNumber);
         }
+    }
+
+    /**
+     * Изменение пути картинки для front-card
+     * @param flipperNumber
+     */
+    changeSrcFront(flipperNumber) {
+
+        let _randomSrc = this.randomSrc;
+
+        if (this.card_back[flipperNumber].getAttribute('src') === _randomSrc) this.changeSrcFront(flipperNumber);
+        else this.card_front[flipperNumber].setAttribute('src', _randomSrc);
+    }
+
+    /**
+     * Изменение пути картинки для back-card
+     * @param flipperNumber
+     */
+    changeSrcBack(flipperNumber) {
+        let _randomSrc = this.randomSrc;
+
+        if (this.card_front[flipperNumber].getAttribute('src') === _randomSrc) this.changeSrcBack(flipperNumber);
+        else this.card_back[flipperNumber].setAttribute('src', _randomSrc);
     }
 
     /**
      * Установка интервала смены картинок
      */
     setInterval() {
-        let interval = setInterval(_ => {
-            this.flipCard(this.randomCard);
-        }, this._interval);
+        this._iter = 0;
+
+        this.loop();
     }
+
+    /**
+     * Бесконечный цикл смены flip-card
+     */
+    loop() {
+        requestAnimationFrame(_ => {
+            if (this._iter % this._interval === 0 && this._iter !== 0) {
+                this.flipCard(this.randomCard);
+            }
+
+            this._iter++;
+            this.loop();
+        });
+    }
+
 
     /**
      * Парсинг числа из строки
