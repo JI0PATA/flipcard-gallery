@@ -1,3 +1,6 @@
+let qs = selector => document.querySelector(selector),
+    qsa = selector => document.querySelectorAll(selector);
+
 class FlipGallery {
     constructor(container, src, options) {
         this._container = container;
@@ -47,11 +50,19 @@ class FlipGallery {
      * @param flipperNumber
      */
     flipCard(flipperNumber) {
+        // Переход к родителю
         let flipper = this.card_front[flipperNumber].parentNode;
 
+        // Получение значения transform родителя
         let flipperTransform = flipper.style.transform;
 
-        if (flipperTransform.length === 0) flipper.style.transform = 'rotateY(180deg)';
+        // Если карточка ещё ни разу не крутилась,
+        // то значение у родителя не будет значения transform
+        // То добавляем начальное значение
+        if (flipperTransform.length === 0) {
+            flipper.style.transform = 'rotateY(180deg)';
+        }
+        // Иначе изменяем текущее значение
         else {
             flipper.style.transform = `rotateY(${FlipGallery.getNumber(flipperTransform) + 180}deg)`;
         }
@@ -84,8 +95,8 @@ class FlipGallery {
 
         let _randomSrc = this.randomSrc;
 
-        if (this.card_back[flipperNumber].getAttribute('src') === _randomSrc) this.changeSrcFront(flipperNumber);
-        else this.card_front[flipperNumber].setAttribute('src', _randomSrc);
+        if (FlipGallery.getBackgroundUrl(this.card_back[flipperNumber].style.backgroundImage) === _randomSrc) this.changeSrcFront(flipperNumber);
+        else this.card_front[flipperNumber].style.backgroundImage = _randomSrc;
     }
 
     /**
@@ -95,8 +106,8 @@ class FlipGallery {
     changeSrcBack(flipperNumber) {
         let _randomSrc = this.randomSrc;
 
-        if (this.card_front[flipperNumber].getAttribute('src') === _randomSrc) this.changeSrcBack(flipperNumber);
-        else this.card_back[flipperNumber].setAttribute('src', _randomSrc);
+        if (FlipGallery.getBackgroundUrl(this.card_front[flipperNumber].style.backgroundImage) === _randomSrc) this.changeSrcBack(flipperNumber);
+        else this.card_back[flipperNumber].style.backgroundImage = _randomSrc;
     }
 
     /**
@@ -120,6 +131,15 @@ class FlipGallery {
             this._iter++;
             this.loop();
         });
+    }
+
+    /**
+     * Получение URL из background-image
+     * @param string
+     * @returns {string | * | void}
+     */
+    static getBackgroundUrl(string) {
+        return string.replace('url("','').replace('")','')
     }
 
 
